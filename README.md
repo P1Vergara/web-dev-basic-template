@@ -1,7 +1,7 @@
 # web-dev-basic-template
 ## Template starter for basic web development
 
-This is a lightweight and simple template for basic web development, includes [normalize.css](https://necolas.github.io/normalize.css/) and gulp management for easier workflow.
+This is a lightweight and simple template for basic web development, includes [normalize.css](https://necolas.github.io/normalize.css/) and [gulp](https://gulpjs.com/) management for easier workflow.
 
 ### The template has three folders.
 
