@@ -1,8 +1,8 @@
 'use strict';
 
-/**
- * Gulp extensions
- */
+//
+// Gulp extensions
+//
 var gulp = require('gulp');
 var path = require('path');
 var sass = require('gulp-sass');
@@ -11,29 +11,29 @@ var sourcemaps = require('gulp-sourcemaps');
 var autoprefixer = require('gulp-autoprefixer');
 var browserSync = require('browser-sync');
 
-/**
- * Folders references
- */
+//
+// Folders references
+//
 var BUILD_PATH = './build';
 var SOURCE_PATH = './src';
 var STATIC_PATH = './static';
 
-/**
- * Copy STATIC_PATH folder components to BUILD_PATH
- */
+//
+// Copy STATIC_PATH folder components to BUILD_PATH
+//
 function copyStatic(){
 	/// images assets workflow
 	gulp.src(STATIC_PATH + '/assets/**/*.*')
 	.pipe(gulp.dest(BUILD_PATH + '/assets/'))
 
 	/// resources workflow
-	gulp.src(STATIC_PATH + '/resources/*.*')
-	.pipe(gulp.dest(BUILD_PATH + '/resources/'))
+	gulp.src(STATIC_PATH + '/libraries/**/*.*')
+	.pipe(gulp.dest(BUILD_PATH + '/libraries/'))
 }
 
-/**
-* Workflow pipeline for the SOURCE_PATH files
-*/
+//
+// Workflow pipeline for the SOURCE_PATH files
+//
 function workflow() {
 	/// html workflow
 	gulp.src(SOURCE_PATH + '/*.html')
@@ -60,9 +60,9 @@ function workflow() {
 	.pipe(gulp.dest(BUILD_PATH + '/scripts/'))
 }
 
-/**
-* Watch workflows
-*/
+//
+// Watch workflows
+//
 function watchWorkflow() {
 	/// watch all the type of files
 	gulp.watch(SOURCE_PATH + '/*.html', ['workflow']);
@@ -70,11 +70,14 @@ function watchWorkflow() {
 	gulp.watch(SOURCE_PATH + '/scripts/*.js', ['workflow']);
 }
 
-/**
-* Start browserSync emulation http://Localhost:3000
-*/
+//
+// Start browserSync at Localhost:8000
+//
 function server() {
     var options = {
+		ui: {
+			port: 8000
+		},
         server: {
             baseDir: BUILD_PATH
         },
@@ -84,13 +87,11 @@ function server() {
     browserSync(options);
 }
 
-/**
-* Run gulp tasks
-*/
-/// tasks for normal workflow
+//
+// Run gulp tasks
+//
 gulp.task('workflow', workflow);
 gulp.task('watchWorkflow', watchWorkflow);
 gulp.task('server', server);
 gulp.task('copyStatic', copyStatic);
-
 gulp.task('default', ['workflow', 'watchWorkflow', 'server']);
