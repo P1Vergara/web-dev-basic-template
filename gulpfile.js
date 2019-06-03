@@ -25,28 +25,15 @@ const BUILD_PATH = './build',
 // Manually clean build folder
 //
 const cleanBuild = function () {
-	del([BUILD_PATH + '/*']);
-}
-
-//
-// Copy STATIC_PATH folder components to BUILD_PATH
-//
-const copyStatic = function (){
-	// images assets workflow
-	gulp.src(STATIC_PATH + '/assets/**/*.*')
-	.pipe(gulp.dest(BUILD_PATH + '/assets/'))
-
-	// libraries workflow
-	gulp.src(STATIC_PATH + '/libraries/*.*')
-	.pipe(gulp.dest(BUILD_PATH + '/libraries/'))
+	return del([BUILD_PATH + '/*']);
 }
 
 //
 // Tasks workflow pipeline
 //
-const workflow = function () {
-	// html workflow
-	gulp.src(SOURCE_PATH + '/*.html')
+// html workflow
+const html = function() {
+	return gulp.src(SOURCE_PATH + '/*.html')
 		.pipe(sourcemaps.init())
 		.pipe(htmlMin({
 			collapseWhitespace: true,
@@ -54,21 +41,25 @@ const workflow = function () {
 		}))
 		.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(BUILD_PATH + '/'))
+}
 
-	// css workflow
-	gulp.src(SOURCE_PATH + '/styles/*.scss')
+// css workflow
+const scss = function () {
+	return gulp.src(SOURCE_PATH + '/styles/*.scss')
 		.pipe(sourcemaps.init())
 		.pipe(sass().on('error', sass.logError))
 		.pipe(autoprefixer({
-		  browsers: ['last 2 versions'],
-		  cascade: false
+		  	overrideBrowserslist: ['last 2 versions'],
+		  	cascade: false
 		}))
 		.pipe(cssnano())
 		.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(BUILD_PATH + '/styles/'))
+}
 
-	// javascript workflow
-	gulp.src(SOURCE_PATH + '/scripts/*.js')
+// javascript workflow
+const js = function () {
+	return	gulp.src(SOURCE_PATH + '/scripts/*.js')
 		.pipe(sourcemaps.init())
 		.pipe(babel({
 			presets: ['@babel/env']
@@ -76,46 +67,88 @@ const workflow = function () {
 		.pipe(uglify())
 		.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(BUILD_PATH + '/scripts/'))
+}
 
-	// php workflow
-	gulp.src(SOURCE_PATH + '/*.php')
-		// .pipe(sourcemaps.init())
-		// .pipe(sourcemaps.write('./'))
+// php workflow
+const php = function () {
+	return	gulp.src(SOURCE_PATH + '/*.php')
+		.pipe(sourcemaps.init())
+		.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(BUILD_PATH + '/'))
+}
+
+//
+// STATIC_PATH folder components to BUILD_PATH
+//
+// assets files
+const assets = function () {
+	return gulp.src(STATIC_PATH + '/assets/**/*.*')
+	.pipe(gulp.dest(BUILD_PATH + '/assets/'))
+}
+
+// libraries files
+const libraries = function () {
+	return gulp.src(STATIC_PATH + '/libraries/*.*')
+	.pipe(gulp.dest(BUILD_PATH + '/libraries/'))
 }
 
 //
 // Tasks workflow watch files
 //
-const watchWorkflow = function () {
+const watchFiles = function () {
 	// watch all the type of files
-	gulp.watch(SOURCE_PATH + '/*.html', gulp.series(workflow));
-	gulp.watch(SOURCE_PATH + '/styles/*.scss', gulp.series(workflow));
-	gulp.watch(SOURCE_PATH + '/scripts/*.js', gulp.series(workflow));
-	gulp.watch(SOURCE_PATH + '/*.php', gulp.series(workflow));
+	gulp.watch(SOURCE_PATH + '/*.html', html);
+	gulp.watch(SOURCE_PATH + '/styles/*.scss', scss);
+	gulp.watch(SOURCE_PATH + '/scripts/*.js', js);
+	gulp.watch(SOURCE_PATH + '/*.php', php);
+
+	gulp.watch(STATIC_PATH + '/assets/**/*.*', assets);
+	gulp.watch(STATIC_PATH + '/libraries/*.*', libraries);
+
+	gulp.series(browserSyncReload);
 }
 
 //
-// Start browserSync emulation http://Localhost:3000
+// Start browserSync at http://Localhost:3000
 //
-const server = function () {
+const serve = function (done) {
     let options = {
         server: {
             baseDir: BUILD_PATH
-        },
+		},
+		port: 3000,
         open: false /// 'true' to open a browser window, 'false' to do nothing.
     };
 
-    browserSync(options);
+	browserSync(options);
+	done();
 }
 
 //
-// run gulp tasks
+// Browsersync reload
 //
-gulp.task('cleanBuild', gulp.series(cleanBuild));
-gulp.task('workflow', gulp.series(workflow));
-gulp.task('watchWorkflow', gulp.series(watchWorkflow));
-gulp.task('server', gulp.series(server));
-gulp.task('copyStatic', gulp.series(copyStatic));
+const browserSyncReload = function (done) {
+	browserSync.reload();
+	done();
+}
 
-gulp.task('default', gulp.parallel(workflow, watchWorkflow, server));
+
+//
+// Complex tasks
+//
+const build = gulp.series(cleanBuild, gulp.parallel(html, scss, js, php, assets, libraries));
+const watch = gulp.parallel(watchFiles, serve);
+
+//
+// Export tasks
+//
+exports.html = html;
+exports.scss = scss;
+exports.js = js;
+exports.php = php;
+exports.assets = assets;
+exports.libraries = libraries;
+exports.cleanBuild = cleanBuild;
+exports.build = build;
+exports.watch = watch;
+exports.default = build;
